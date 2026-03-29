@@ -112,7 +112,8 @@ function mockAnalyze(pageData: PageData): AnalysisResult {
   // appears in the URL. .find() returns the first match or
   // undefined if nothing matches.
   const matchedSafe: string | undefined = Object.keys(safeDomainsInfo).find(
-    (safeDomain: string) => domain.includes(safeDomain)
+    (safeDomain: string) =>
+      domain === safeDomain || domain.endsWith("." + safeDomain)
   );
 
   if (matchedSafe) {
