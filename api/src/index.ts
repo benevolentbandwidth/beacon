@@ -1,9 +1,11 @@
 import express from "express";
 import { analyzeText } from "./scamHeuristics.js";
 
+// TODO: add port string access
 const PORT = Number(process.env.PORT) || 3000;
 
 const app = express();
+//TODO : add rate limiting here
 app.use(express.json({ limit: "512kb" }));
 
 app.post("/v1/check", (req, res) => {

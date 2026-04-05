@@ -14,5 +14,8 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
+
+RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
+USER appuser
 EXPOSE 3000
 CMD ["node", "dist/index.js"]
