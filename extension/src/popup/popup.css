@@ -24,7 +24,29 @@ body {
 #header p {
   font-size: 14px;
   color: #555555;
-  margin: 0;
+  margin: 0 0 12px 0;
+}
+
+/* ---- Toggle Button ---- */
+
+#toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+#toggle-label {
+  font-size: 13px;
+  color: #555555;
+  font-weight: bold;
+}
+
+#scan-toggle {
+  width: 40px;
+  height: 24px;
+  cursor: pointer;
+  accent-color: #1a5f7a;
 }
 
 /* ---- Scan Button ---- */
