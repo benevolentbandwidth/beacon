@@ -3,12 +3,11 @@
 //analyzes content of page (text, links, title, etc)
 //returns HeuristicResult showing how likely page is a scam
 
-import { HandFist } from "../../../../../../../../node_modules/lucide-react/dist/lucide-react";
 import type { HeuristicResult, ExtractedPageData } from "../types/heuristics";
 
 //Scam phrase list
 
-const SCAM_PHRASES:  readonly string[] = [
+const SCAM_PHRASES: readonly string[] = [
     "you have won",
     "you've won",
     "congratulations, you won",
@@ -21,11 +20,10 @@ const SCAM_PHRASES:  readonly string[] = [
     "send a wire transfer",
     "you are the lucky winner",
     "congratulations you are our winner",
-
 ];
 
 //Helper: extract the hostname from a URL string
-//takes URL string and returns hostname (domain) or null if invalid URL
+//takes URL string and returns hostname (domain) or empty string if invalid URL
 
 function extractDomain(url: string): string {
     try {
@@ -38,7 +36,7 @@ function extractDomain(url: string): string {
 
 //Helper: normalize a domain for comparison
 //Takes a domain (like "www.apple.com" or "mail.apple.com") and returns
-// the "base domain" for comparison purposes.
+//the "base domain" for comparison purposes.
 
 function normalizeDomain(domain: string): string {
     if (domain.length === 0) {
@@ -48,7 +46,7 @@ function normalizeDomain(domain: string): string {
     if (parts.length <= 2) {
         return domain; //already base domain
     }
-    return parts[parts.length -2] + "." + parts[parts.length -1]; //return last two parts as base domain
+    return parts[parts.length - 2] + "." + parts[parts.length - 1]; //return last two parts as base domain
 }
 
 //Helper: extract a claimed domain from link text
@@ -77,7 +75,7 @@ function extractClaimedDomain(text: string): string | null {
         return parsed.hostname.toLowerCase();
     } catch {
         //try adding a protocol and parsing again
-        try { 
+        try {
             const parsed = new URL("http://" + trimmed);
             return parsed.hostname.toLowerCase();
         } catch {
@@ -92,7 +90,7 @@ function isSameSite(domainA: string, domainB: string): boolean {
     if (domainA.length === 0 || domainB.length === 0) {
         return false; //if either domain is empty, can't be same site
     }
-    return normalizeDomain(domainA) === normalizeDomain(domainB);   
+    return normalizeDomain(domainA) === normalizeDomain(domainB);
 }
 
 //Helper: scan piece of text for scam phrase
@@ -111,7 +109,7 @@ function findScamPhrases(text: string): string[] {
     return matches;
 }
 
-//(1) Main analysis function (content heuristic)
+// main analysis function
 //takes extracted page data and returns a HeuristicResult
 
 export function analyzeContent(pageData: ExtractedPageData): HeuristicResult {
@@ -132,41 +130,41 @@ export function analyzeContent(pageData: ExtractedPageData): HeuristicResult {
         findings.push(`Scam phrase in page text: '${phrase}'`);
     }
 
-//(2) Mismatched links 
-//For each link on the page, check if the visible text claims a pecific 
-//domain that doesn't match where the link actually goes.
-const currentDomain: string = extractDomain(pageData.url);
-let mismatchedLinkCount: number = 0;
+    //(2) Mismatched links
+    //For each link on the page, check if the visible text claims a specific
+    //domain that doesn't match where the link actually goes.
+    const currentDomain: string = extractDomain(pageData.url);
+    let mismatchedLinkCount: number = 0;
 
-for (const link of pageData.links) {
-    const claimedDomain: string | null = extractClaimedDomain(link.text);
-    if (claimedDomain === null) {
-        continue;
-    }
-    
-    const hrefDomain: string = extractDomain(link.href);
+    for (const link of pageData.links) {
+        const claimedDomain: string | null = extractClaimedDomain(link.text);
+        if (claimedDomain === null) {
+            continue;
+        }
+
+        const hrefDomain: string = extractDomain(link.href);
         if (hrefDomain.length === 0) {
             continue;
         }
 
-    // skip same-site links
-    if(isSameSite(hrefDomain, currentDomain)) {
-        continue;
+        // skip same-site links
+        if (isSameSite(hrefDomain, currentDomain)) {
+            continue;
+        }
+
+        //compare claimed domain with actual href domain
+        if (!isSameSite(claimedDomain, hrefDomain)) {
+            mismatchedLinkCount++;
+            findings.push(
+                `Mismatched link: visible text claims '${claimedDomain}' but href goes to '${hrefDomain}'`
+            );
+        }
     }
 
-    //compare claimed domain with actual href domain
-    if (!isSameSite(claimedDomain, hrefDomain)) {
-        mismatchedLinkCount++;
-        findings.push(
-            `Mismatched link: visible text claims '${claimedDomain}' but href goes to '${hrefDomain}'`
-        );
-    }
-}
-
-//Scoring
-//combine all matches into single score
-//the more matches found, the higher the score
-//phrases in title or meta count more than in body
+    //Scoring
+    //combine all matches into single score
+    //the more matches found, the higher the score
+    //phrases in title or meta count more than in body
 
     let score: number = 0;
     score += titleMatches.length * 3;
@@ -174,13 +172,13 @@ for (const link of pageData.links) {
     score += textMatches.length * 2;
     score += mismatchedLinkCount * 4;
 
-//cap score at 10
+    //cap score at 10
     if (score > 10) {
-        score = 10; 
+        score = 10;
     }
 
-//verdict + explanation
-//convert numeric score into verdict and explanation
+    //verdict + explanation
+    //convert numeric score into verdict and explanation
     let verdict: HeuristicResult["verdict"];
     let explanation: string;
 

@@ -1,5 +1,5 @@
 // Manual test for the content heuristics function
-//NOT part of extension
+// Compiled with the extension source, but not executed by the extension runtime.
 
 import { analyzeContent } from "./contentHeuristics";
 import type { ExtractedPageData } from "../types/heuristics";
@@ -8,7 +8,6 @@ import type { ExtractedPageData } from "../types/heuristics";
 function runTest(name: string, pageData: ExtractedPageData): void {
     console.log("===============================================================");
     console.log(`TEST: ${name}`);
-    console.log("TEST: " + name);
     console.log("----------------------------------------------------------------");
     const result = analyzeContent(pageData);
     console.log("Score: " + result.score);
