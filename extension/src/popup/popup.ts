@@ -18,8 +18,7 @@ interface AnalysisResult {
   websiteInfo: WebsiteInfo;
 }
 
-//(2) grab references to HTML elements
-
+//(2) grab references to HTML elements - DO THIS FIRST
 const scanButton = document.getElementById("scan-button") as HTMLButtonElement;
 const resultsDiv = document.getElementById("results") as HTMLDivElement;
 const scoreCircle = document.getElementById("score-circle") as HTMLDivElement;
@@ -35,6 +34,96 @@ const infoAge = document.getElementById("info-age") as HTMLSpanElement;
 const infoCountry = document.getElementById("info-country") as HTMLSpanElement;
 const infoRegistrar = document.getElementById("info-registrar") as HTMLSpanElement;
 const infoPopularity = document.getElementById("info-popularity") as HTMLSpanElement;
+
+//(1.5) Toggle Button Setup - wrapped in DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  const scanToggle = document.getElementById('scan-toggle') as HTMLInputElement;
+  const llmToggle = document.getElementById('llm-toggle') as HTMLInputElement;
+  const scanKnobSwitch = document.querySelectorAll('.knob-switch')[0] as HTMLElement;
+  const llmKnobSwitch = document.querySelectorAll('.knob-switch')[1] as HTMLElement;
+
+  // Verify elements exist
+  if (!scanToggle) {
+    console.error('[Beacon] Scan toggle checkbox not found');
+    return;
+  } else {
+    console.log('[Beacon] Scan toggle found, initializing...');
+  }
+
+  if (!llmToggle) {
+    console.error('[Beacon] LLM toggle checkbox not found');
+    return;
+  } else {
+    console.log('[Beacon] LLM toggle found, initializing...');
+  }
+
+  // Make scan knob clickable
+  if (scanKnobSwitch) {
+    scanKnobSwitch.addEventListener('click', () => {
+      scanToggle.checked = !scanToggle.checked;
+      scanToggle.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  // Make LLM knob clickable
+  if (llmKnobSwitch) {
+    llmKnobSwitch.addEventListener('click', () => {
+      llmToggle.checked = !llmToggle.checked;
+      llmToggle.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  // Load scan toggle state from Chrome storage
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.get(['scanningEnabled'], (result) => {
+      const isEnabled = result.scanningEnabled !== false;
+      scanToggle.checked = isEnabled;
+      updateScanButtonState(isEnabled);
+      console.log('[Beacon] Scan toggle initialized:', isEnabled);
+    });
+
+    // Load LLM toggle state from Chrome storage
+    chrome.storage.local.get(['llmEnabled'], (result) => {
+      const isEnabled = result.llmEnabled !== false;
+      llmToggle.checked = isEnabled;
+      console.log('[Beacon] LLM toggle initialized:', isEnabled);
+    });
+  } else {
+    console.warn('[Beacon] chrome.storage not available, using default state');
+    scanToggle.checked = true;
+    llmToggle.checked = true;
+    updateScanButtonState(true);
+  }
+
+  // Listen for scan toggle changes
+  scanToggle.addEventListener('change', (event) => {
+    const isEnabled = (event.target as HTMLInputElement).checked;
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set({ scanningEnabled: isEnabled });
+    }
+    updateScanButtonState(isEnabled);
+    console.log('[Beacon] Scan toggle changed:', isEnabled);
+  });
+
+  // Listen for LLM toggle changes
+  llmToggle.addEventListener('change', (event) => {
+    const isEnabled = (event.target as HTMLInputElement).checked;
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set({ llmEnabled: isEnabled });
+    }
+    console.log('[Beacon] LLM toggle changed:', isEnabled);
+  });
+});
+
+// Update the scan button's disabled state based on toggle
+function updateScanButtonState(isEnabled: boolean): void {
+  scanButton.disabled = !isEnabled;
+  if (!isEnabled) {
+    scanButton.textContent = 'Scanning disabled';
+  } else {
+    scanButton.textContent = 'Check this page';
+  }
+}
 
 //(2.5) helper to extract domain from URL
 
