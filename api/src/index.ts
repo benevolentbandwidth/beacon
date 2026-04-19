@@ -1,5 +1,7 @@
 import express from "express";
 import { analyzeText } from "./scamHeuristics.js";
+import { analyzeHandler } from "./handlers/analyzeHandler.js";
+import { validateAnalyzeRequest } from "./middleware/validate.js";
 
 // TODO: add port string access
 const PORT = Number(process.env.PORT) || 3000;
@@ -26,6 +28,9 @@ app.post("/v1/check", (req, res) => {
     matches: result.matches,
   });
 });
+
+// POST /v1/analyze - AI-powered analysis
+app.post("/v1/analyze", validateAnalyzeRequest, analyzeHandler);
 
 app.listen(PORT, () => {
   console.log(`Beacon API listening on port ${PORT}`);
