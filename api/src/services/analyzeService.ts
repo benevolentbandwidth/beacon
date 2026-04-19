@@ -4,14 +4,14 @@ import { MockProvider } from "../providers/mockProvider.js";
 
 type ModelChoice = "external_llm" | "custom_model";
 
-// Routing rules 
-function selectModel(heuristicScore: number, context: string): ModelChoice {
-  // High risk OR email → External LLM call
-  if (heuristicScore >= 0.85 || context === "email_body") {
+// Context-based routing
+function selectModel(context: string): ModelChoice {
+  // High-risk contexts → External LLM
+  if (context === "email_body" || context === "sms") {
     return "external_llm";
   }
 
-  //  Low risk → Custom model
+  // Lower-risk contexts (page_body, form) → Custom model
   return "custom_model";
 }
 
@@ -26,7 +26,7 @@ export class AnalyzeService {
   }
 
   async analyze(request: AnalyzeRequest): Promise<AnalyzeResponse> {
-    const model = selectModel(request.heuristic_score, request.context);
+    const model = selectModel(request.context);
 
     const provider = model === "external_llm" ? this.externalLlm : this.customModel;
 
